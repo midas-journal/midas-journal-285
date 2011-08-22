@@ -1,0 +1,59 @@
+Summary:
+The authors describe a new set of classes used to apply a color map to a grayscale image.
+Open Science:
+Code source a very good explanations are provided.
+Reproducibility:
+I've been able to download, build, run and read the code without any problem.
+
+Reproducing the examples has required a bit more work, because the test program simply doesn't write the output result to the disk. I would suggest writing the output to the disk (see attached file) and make the tests check the produced image. This can be acheived easily with itkTestDriver with the following lines:
+
+FIND_PROGRAM(ITK_TEST_DRIVER itkTestDriver)
+SET(TEST_COMMAND ${ITK_TEST_DRIVER} --add-before-env PATH ${CMAKE_BINARY_DIR})
+
+ADD_TEST( RGBColormapTestSpring ${TEST_COMMAND} ${CurrentExe}
+          ${CMAKE_SOURCE_DIR}/images/grey.png spring.png spring
+          --compare spring.png ${CMAKE_SOURCE_DIR}/images/spring.png
+)
+
+** done **
+
+ 
+Use of Open Source Software:
+ITK all the way.
+Open source Contributions:
+The code is very nice - It tooks me a few minutes to use it.
+Code Quality :
+The code is very easy to read and seems to follow all the itk coding styles.
+Free comment :
+Here are a few questions and suggestions:
+
+
+IMO, color map functor should have the whole pixel type as template parameter, to be able to use the RGBA pixels the same way
+
+** done **
+
+are you sure that the Get/SetRed/Green/BlueChannel() method should be there? I think they are quite strange, because itk::RGBPixel clearly use the first channel as red, the second as green and the last one as blue, so changing that in the functor means that this property is not respected by the functor
+
+** ?? **
+
+maybe m_MinimumRGBComponentValue and m_MaximumRGBComponentValue default values should be min() and max() rather than Zero and One?
+
+** done **
+
+is there a reason to not have implemented ScalarToRGBColormapImageFilter as a subclass of UnaryFunctorImageFilter? It is said in the paper that that filter has large parts of code from UnaryFunctorImageFilter - maybe subclassing it would be a better way to reuse the code without duplication
+
+** ?? UnaryFunctorImageFilter is rigid in its "SetFunctor" capabilities **
+
+would you agree to add an option to compute the min and max values to be used in the functor automatically? That way, the filter would fit better in the pipeline architecture
+
+** done **
+
+to make the usage of the predefined colormaps easier, I would suggest the addition of a new method to ScalarToRGBColormapImageFilter which would allow to use one of those colormap in a single line. For example rgbfilter->SetColormap( RGBFilterType::HSV ) or rgbfilter->SetColormap( "hsv" )
+
+** done **
+
+I would also suggest to drop the ScalarToRGB part in the colormap names, and maybe also the Functor suffix - ScalarToRGBJetColormapFunctor would become JetColormapFunctor, or even JetColormap, which is a lot easier to read and write
+
+** done **
+
+finally, I have contributed another colormap used quive often by microscopists to see the saturation in the images - feel free to use it :-)
